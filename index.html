@@ -113,6 +113,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
 .edu{font-size:15px;color:var(--muted);margin-top:24px}
 .actions{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 8px}
 .actions .btn{flex:1 1 200px}
+.docx-note{font-size:14px;color:var(--muted);margin:0 0 8px}
 .empty{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:20px}
 .empty h2{font-size:18px;color:var(--navy);margin-top:14px}
 .empty h2:first-child{margin-top:0}
@@ -158,7 +159,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var
   @page{margin:15mm}
   :root{--navy:#000;--blue:#000;--ink:#000;--muted:#000;--line:#000;--link:#000}
   body{background:#fff;font-size:11pt;color:#000}
-  .top,.foot,.actions,.summary,.legend summary{display:none!important}
+  .top,.foot,.actions,.docx-note,.summary,.legend summary{display:none!important}
   .print-only{display:block}
   .wrap{max-width:none;padding:0}
   .print-head .print-title{font-size:18pt;font-weight:700;margin:0}
@@ -537,6 +538,35 @@ const BENEFITS = [
 /* Строка про госпошлину (Б2) */
 const showDuty = a => any(a, ["ИНВ1", "ИНВ2", "ИНВД", "ВБД", "ВОВ", "ГЕР"]);
 
+/* ---------- Тексты экрана результата (общие для сайта и памятки в Word) ---------- */
+const RESULT_TEXT = {
+  title: "Вы можете претендовать на эти льготы",
+  lead: "Мы подобрали их по вашим ответам. Есть ли у вас право на льготу, окончательно решает налоговая.",
+  emptyTitle: "Особых льгот по вашим ответам не нашлось",
+  emptyLead: "Так бывает, если вы не относитесь к льготным категориям и у вас не было крупных расходов. Но кое-что действует для всех.",
+  emptyBlocks: [
+    ["Если у вас есть или появится жильё", "Налог на имущество не начисляют на 20 кв. м квартиры, 10 кв. м комнаты и 50 кв. м дома. Делать для этого ничего не нужно."],
+    ["Если вы платите НДФЛ", "Часть налога можно вернуть, если вы платили за лечение, обучение, спорт, покупку жилья или ипотеку. Например, вычет 150 000 руб. возвращает 19 500 руб."]
+  ],
+  emptyLink: ["Подробнее о вычетах на сайте ФНС", LINKS.ndfl],
+  region: "Мы показываем льготы, которые действуют по всей России. В вашем регионе могут быть свои льготы по транспортному, земельному налогу и налогу на имущество. Их можно найти в сервисе ФНС «Справочная информация о ставках и льготах по имущественным налогам».",
+  regionLink: ["Открыть сервис ФНС", LINKS.service],
+  deduction: "Вычет – это не сумма, которую вернут, а сумма, с которой пересчитают налог. Например, вычет 150 000 руб. возвращает 19 500 руб. Вернуть налог в упрощённом порядке можно не больше чем за 3 последних года.",
+  noTd: "вычет возвращает уже уплаченный НДФЛ. Он сработает, только если у вас есть доход, с которого платят НДФЛ, например зарплата. С доходов самозанятого НДФЛ не платят.",
+  duty: "При обращении к нотариусу или в суд у вас тоже могут быть льготы.",
+  noticeTitle: "Если льгота не учтена в налоговом уведомлении",
+  noticeSteps: [
+    "Проверьте личный кабинет на сайте ФНС: раздел «Профиль», подраздел «Сведения», вкладка «Льготы».",
+    "Если нужной льготы там нет, подайте заявление по форме КНД 1150063. Это можно сделать в личном кабинете, в МФЦ, в любой налоговой инспекции или по почте. Прикладывать документы не обязательно.",
+    "Заявление рассматривают 30 дней. Налог пересчитают не больше чем за 3 последних года."
+  ],
+  noticeLink: ["Как подать заявление – на сайте ФНС", LINKS.property],
+  edu: `Учебный проект. Не является консультацией налоговой службы. Информация верна на ${INFO_DATE}.`
+};
+
+/* Короткие названия вопросов – для таблицы «Мои ответы» в памятке */
+const QUESTION_SHORT = ["Регистрация", "Кто я", "Дети", "Имущество", "Транспорт", "Доход", "Расходы за 3 года", "Продажа имущества"];
+
 /* =====================================================================
    ПОДБОР ЛЬГОТ (без интерфейса – можно проверять отдельно)
    ===================================================================== */
@@ -554,6 +584,248 @@ function pickBenefits(a) {
       link: b.link
     };
   });
+}
+
+/* Всё, что нужно экрану результата и памятке: карточки, группы, пометки */
+function resultModel(a) {
+  const cards = pickBenefits(a);
+  return {
+    cards,
+    noAction: cards.filter(c => c.labels.every(l => !LABELS[l].act)).length,
+    isEmpty: cards.every(c => c.always),
+    usedLabels: Object.keys(LABELS).filter(l => cards.some(c => c.labels.includes(l))),
+    region: a.has("РЕГ"),
+    duty: showDuty(a),
+    noTd: !a.has("ТД"),
+    groups: GROUPS.map(([key, name]) => {
+      const list = cards.filter(c => c.group === key);
+      return { key, name, list, deductionNote: key === "ndfl" && list.some(c => c.deduction) };
+    }).filter(g => g.list.length)
+  };
+}
+
+/* =====================================================================
+   ПАМЯТКА В WORD (.docx)
+   Файл .docx – это zip-архив с несколькими XML-файлами. Помощник собирает
+   его прямо в браузере: без библиотек, без интернета, ничего не отправляя.
+   ===================================================================== */
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const DOCX_NAME = "Памятка_налоговые_льготы.docx";
+
+const Docx = (() => {
+  const TEXT_W = 9638;                 // ширина текста: A4 (11906) минус поля по 2 см, в твипах
+  const C = { navy: "0B2E59", ink: "13233A", muted: "4A5B72", line: "B9C8DA", noact: "DCE9F7",
+              act: "FDEADB", actInk: "8A2C06", box: "EEF3F9", blue: "1D5FA8" };
+  const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const x = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  /* --- кусочки WordprocessingML --- */
+  function run(text, o = {}) {
+    const pr = (o.style ? `<w:rStyle w:val="${o.style}"/>` : "") + (o.b ? "<w:b/><w:bCs/>" : "") + (o.i ? "<w:i/><w:iCs/>" : "")
+      + (o.color ? `<w:color w:val="${o.color}"/>` : "") + (o.sz ? `<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>` : "")
+      + (o.bdr ? `<w:bdr w:val="single" w:sz="4" w:space="0" w:color="${o.bdr}"/>` : "")
+      + (o.shd ? `<w:shd w:val="clear" w:color="auto" w:fill="${o.shd}"/>` : "");
+    return `<w:r>${pr ? `<w:rPr>${pr}</w:rPr>` : ""}<w:t xml:space="preserve">${x(text)}</w:t></w:r>`;
+  }
+  function para(content, o = {}) {
+    const sp = o.before != null || o.after != null
+      ? `<w:spacing${o.before != null ? ` w:before="${o.before}"` : ""}${o.after != null ? ` w:after="${o.after}"` : ""}/>` : "";
+    const pr = (o.style ? `<w:pStyle w:val="${o.style}"/>` : "") + (o.keepNext ? "<w:keepNext/>" : "")
+      + (o.bar ? `<w:pBdr><w:left w:val="single" w:sz="24" w:space="8" w:color="${o.bar}"/></w:pBdr>` : "")
+      + (o.shd ? `<w:shd w:val="clear" w:color="auto" w:fill="${o.shd}"/>` : "") + sp
+      + (o.ind ? `<w:ind w:left="${o.ind}" w:hanging="${o.hanging || 0}"/>` : "")
+      + (o.tiny ? `<w:rPr><w:sz w:val="6"/><w:szCs w:val="6"/></w:rPr>` : "");
+    return `<w:p>${pr ? `<w:pPr>${pr}</w:pPr>` : ""}${content}</w:p>`;
+  }
+  function table(rows, widths, o = {}) {
+    const b = ["top", "left", "bottom", "right", "insideH", "insideV"]
+      .map(s => `<w:${s} w:val="single" w:sz="${o.sz || 6}" w:space="0" w:color="${o.color || C.line}"/>`).join("");
+    return `<w:tbl><w:tblPr><w:tblW w:w="${TEXT_W}" w:type="dxa"/><w:tblBorders>${b}</w:tblBorders><w:tblLayout w:type="fixed"/>`
+      + `<w:tblCellMar><w:top w:w="110" w:type="dxa"/><w:left w:w="150" w:type="dxa"/><w:bottom w:w="40" w:type="dxa"/><w:right w:w="150" w:type="dxa"/></w:tblCellMar></w:tblPr>`
+      + `<w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>`
+      + rows.map(r => `<w:tr><w:trPr><w:cantSplit/></w:trPr>${r.map((cell, i) =>
+          `<w:tc><w:tcPr><w:tcW w:w="${widths[i]}" w:type="dxa"/>${cell.shd ? `<w:shd w:val="clear" w:color="auto" w:fill="${cell.shd}"/>` : ""}</w:tcPr>${cell.body}</w:tc>`).join("")}</w:tr>`).join("")
+      + `</w:tbl>` + para("", { before: 0, after: 120, tiny: true });  // между таблицами нужен абзац, иначе Word их склеит
+  }
+
+  /* --- сборка document.xml --- */
+  function documentXml(m, answersByQuestion, links) {
+    const link = (text, url) => {
+      links.push(url);
+      return `<w:hyperlink r:id="rIdL${links.length}" w:history="1">${run(text, { style: "Hyperlink" })}</w:hyperlink>`
+        + run("  " + url, { sz: 16, color: C.muted });
+    };
+    const badge = l => run(" " + LABELS[l].text + " ", { b: true, sz: 18, color: LABELS[l].act ? C.actInk : C.navy, shd: LABELS[l].act ? C.act : C.noact }) + run("  ", { sz: 18 });
+    const h1 = t => para(run(t), { style: "Heading1" });
+    const today = new Date().toLocaleDateString("ru-RU");
+    const out = [];
+
+    out.push(para(run("Мои возможные налоговые льготы"), { style: "Title" }));
+    out.push(para(run(`Составлено помощником «Проверь свои налоговые льготы» по моим ответам ${today}. Информация верна на ${INFO_DATE}.`, { color: C.muted, sz: 19 }), { after: 160 }));
+    out.push(para(run("Учебный проект. ", { b: true }) + run("Не является консультацией налоговой службы. Есть ли у вас право на льготу, окончательно решает налоговая."),
+      { bar: C.blue, shd: C.box, after: 200 }));
+
+    // мои ответы
+    out.push(h1("Мои ответы"));
+    out.push(table(QUESTIONS.map((Q, i) => [
+      { shd: C.box, body: para(run(QUESTION_SHORT[i], { b: true, color: C.muted, sz: 19 }), { after: 60 }) },
+      { body: para(run(Q.options.filter(([c]) => answersByQuestion[i].includes(c)).map(o => o[1]).join("; ") || "–", { sz: 19 }), { after: 60 }) }
+    ]), [2700, TEXT_W - 2700]));
+
+    // итог или «льгот не нашлось»
+    if (m.isEmpty) {
+      out.push(h1(RESULT_TEXT.emptyTitle));
+      out.push(para(run(RESULT_TEXT.emptyLead)));
+      RESULT_TEXT.emptyBlocks.forEach(([t, p]) => { out.push(para(run(t, { b: true }), { keepNext: true, after: 40 })); out.push(para(run(p))); });
+      out.push(para(link(...RESULT_TEXT.emptyLink)));
+    } else {
+      out.push(h1(RESULT_TEXT.title));
+      out.push(para(run(`Найдено: ${m.cards.length}. `, { b: true }) + run(`Без ваших действий: ${m.noAction}. Нужно ваше действие: ${m.cards.length - m.noAction}.`)));
+    }
+    if (m.region) out.push(para(run(RESULT_TEXT.region + " ") + link(...RESULT_TEXT.regionLink), { bar: C.blue, shd: C.box, before: 120, after: 160 }));
+
+    // что значат метки
+    out.push(h1("Что значат метки"));
+    out.push(table(m.usedLabels.map(l => [
+      { body: para(badge(l), { after: 60 }) },
+      { body: para(run(LABELS[l].about, { sz: 19 }), { after: 60 }) }
+    ]), [3500, TEXT_W - 3500]));
+
+    // льготы по налогам
+    m.groups.forEach(g => {
+      out.push(h1(g.name));
+      if (g.deductionNote) {
+        out.push(para(run(RESULT_TEXT.deduction, { color: C.muted })));
+        if (m.noTd) out.push(para(run("Важно для вас: ", { b: true }) + run(RESULT_TEXT.noTd), { bar: "C2410C", after: 160 }));
+      }
+      g.list.forEach(c => {
+        const body = [
+          para(c.labels.map(badge).join("") + (c.spb ? run(" Для жителей Санкт-Петербурга ", { b: true, sz: 18, color: C.navy, bdr: C.navy }) : ""), { after: 80 }),
+          para(run(c.title, { b: true, sz: 24 }), { keepNext: true, after: 60 }),
+          para(run("Что даёт: ", { b: true, color: C.muted }) + run(c.give), { after: 60 }),
+          para(run("Кому: ", { b: true, color: C.muted }) + run(c.who), { after: 60 }),
+          c.cond ? para(run("Условия: ", { b: true, color: C.muted }) + run(c.cond), { after: 60 }) : "",
+          ...c.extra.map(t => para(run(t, { i: true }), { shd: C.box, after: 60 })),
+          para(link(c.link[0], c.link[1]), { after: 60 })
+        ].join("");
+        out.push(table([[{ body }]], [TEXT_W]));
+      });
+    });
+
+    if (m.duty) out.push(para(run(RESULT_TEXT.duty, { b: true }), { before: 120 }));
+
+    // если льгота не учтена
+    out.push(h1(RESULT_TEXT.noticeTitle));
+    RESULT_TEXT.noticeSteps.forEach((s, i) => out.push(para(run(`${i + 1}.`, { b: true }) + "<w:r><w:tab/></w:r>" + run(s), { ind: 400, hanging: 400, after: 80 })));
+    out.push(para(link(...RESULT_TEXT.noticeLink), { before: 80 }));
+    out.push(para(run(RESULT_TEXT.edu, { color: C.muted, sz: 18 }), { before: 240 }));
+
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${out.join("")}`
+      + `<w:sectPr><w:footerReference w:type="default" r:id="rIdFooter"/><w:pgSz w:w="11906" w:h="16838"/>`
+      + `<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  }
+
+  /* --- остальные части пакета --- */
+  const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${NS}>`
+    + `<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:color w:val="${C.ink}"/>`
+    + `<w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="ru-RU" w:eastAsia="en-US" w:bidi="ar-SA"/></w:rPr></w:rPrDefault>`
+    + `<w:pPrDefault><w:pPr><w:spacing w:after="100" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>`
+    + `<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>`
+    + `<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/>`
+    + `<w:pPr><w:spacing w:after="60"/></w:pPr><w:rPr><w:b/><w:bCs/><w:color w:val="${C.navy}"/><w:sz w:val="40"/><w:szCs w:val="40"/></w:rPr></w:style>`
+    + `<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/>`
+    + `<w:pPr><w:keepNext/><w:pBdr><w:bottom w:val="single" w:sz="8" w:space="3" w:color="${C.navy}"/></w:pBdr><w:spacing w:before="300" w:after="140"/><w:outlineLvl w:val="0"/></w:pPr>`
+    + `<w:rPr><w:b/><w:bCs/><w:color w:val="${C.navy}"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr></w:style>`
+    + `<w:style w:type="paragraph" w:styleId="Footer"><w:name w:val="footer"/><w:basedOn w:val="Normal"/>`
+    + `<w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr><w:rPr><w:color w:val="${C.muted}"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr></w:style>`
+    + `<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:rPr><w:color w:val="${C.blue}"/><w:u w:val="single"/></w:rPr></w:style>`
+    + `<w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/>`
+    + `<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style>`
+    + `</w:styles>`;
+  const FOOTER = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ${NS}><w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr>`
+    + `<w:r><w:t xml:space="preserve">Учебный проект «Проверь свои налоговые льготы». Не является консультацией налоговой службы. Страница </w:t></w:r>`
+    + `<w:fldSimple w:instr=" PAGE "><w:r><w:t>1</w:t></w:r></w:fldSimple></w:p></w:ftr>`;
+  const SETTINGS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings ${NS}><w:defaultTabStop w:val="708"/>`
+    + `<w:characterSpacingControl w:val="doNotCompress"/><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`;
+  const CONTENT_TYPES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+    + `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>`
+    + `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>`
+    + `<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>`
+    + `<Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>`
+    + `<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>`
+    + `<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>`
+    + `<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+  const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+  const ROOT_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    + `<Relationship Id="rId1" Type="${REL}/officeDocument" Target="word/document.xml"/>`
+    + `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>`
+    + `<Relationship Id="rId3" Type="${REL}/extended-properties" Target="docProps/app.xml"/></Relationships>`;
+  const docRels = links => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    + `<Relationship Id="rIdStyles" Type="${REL}/styles" Target="styles.xml"/><Relationship Id="rIdSettings" Type="${REL}/settings" Target="settings.xml"/>`
+    + `<Relationship Id="rIdFooter" Type="${REL}/footer" Target="footer1.xml"/>`
+    + links.map((u, i) => `<Relationship Id="rIdL${i + 1}" Type="${REL}/hyperlink" Target="${x(u)}" TargetMode="External"/>`).join("")
+    + `</Relationships>`;
+  const core = () => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" `
+    + `xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">`
+    + `<dc:title>Мои возможные налоговые льготы</dc:title><dc:creator>Помощник «Проверь свои налоговые льготы» (учебный проект)</dc:creator><dc:language>ru-RU</dc:language>`
+    + `<dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().replace(/\.\d+Z$/, "Z")}</dcterms:created></cp:coreProperties>`;
+  const APP = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Проверь свои налоговые льготы</Application></Properties>`;
+
+  /* --- zip-архив без сжатия (метод «store») --- */
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    return t;
+  })();
+  const crc32 = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_TABLE[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zip(files) {
+    const enc = new TextEncoder(), d = new Date();
+    const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+    const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+    const parts = [], central = [];
+    let offset = 0;
+    for (const [name, text] of files) {
+      const nb = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint16(10, time, true); h.setUint16(12, date, true); h.setUint32(14, crc, true);
+      h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, nb.length, true); h.setUint16(28, 0, true);
+      parts.push(new Uint8Array(h.buffer), nb, data);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+      c.setUint16(12, time, true); c.setUint16(14, date, true); c.setUint32(16, crc, true);
+      c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, nb.length, true); c.setUint32(42, offset, true);
+      central.push(new Uint8Array(c.buffer), nb);
+      offset += 30 + nb.length + data.length;
+    }
+    const size = central.reduce((s, p) => s + p.length, 0);
+    const e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+    e.setUint32(12, size, true); e.setUint32(16, offset, true);
+    return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: DOCX_MIME });
+  }
+
+  /* --- готовая памятка --- */
+  function build(a, answersByQuestion) {
+    const links = [];
+    const doc = documentXml(resultModel(a), answersByQuestion, links);
+    return zip([
+      ["[Content_Types].xml", CONTENT_TYPES], ["_rels/.rels", ROOT_RELS],
+      ["word/document.xml", doc], ["word/_rels/document.xml.rels", docRels(links)],
+      ["word/styles.xml", STYLES], ["word/settings.xml", SETTINGS], ["word/footer1.xml", FOOTER],
+      ["docProps/core.xml", core()], ["docProps/app.xml", APP]
+    ]);
+  }
+  return { build };
+})();
+
+function downloadMemo() {
+  const blob = Docx.build(allAnswers(), state.answers);
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href; a.download = DOCX_NAME;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 10000);
 }
 
 /* =====================================================================
@@ -675,78 +947,63 @@ function cardHtml(c) {
 
 function renderResult() {
   const a = allAnswers();
-  const cards = pickBenefits(a);
-  const found = cards.filter(c => !c.always);
-  const isEmpty = found.length === 0;
-  const noAction = cards.filter(c => c.labels.every(l => !LABELS[l].act)).length;
-  const usedLabels = Object.keys(LABELS).filter(l => cards.some(c => c.labels.includes(l)));
+  const m = resultModel(a);
+  const T = RESULT_TEXT;
+  const ext = ([text, url]) => `<a href="${url}" target="_blank" rel="noopener">${esc(text)}</a>`;
   document.title = "Результат – Проверь свои налоговые льготы";
 
-  const head = isEmpty ? `
-    <div class="r-head"><h1>Особых льгот по вашим ответам не нашлось</h1>
-      <p>Так бывает, если вы не относитесь к льготным категориям и у вас не было крупных расходов. Но кое-что действует для всех.</p></div>
+  const head = m.isEmpty ? `
+    <div class="r-head"><h1>${esc(T.emptyTitle)}</h1><p>${esc(T.emptyLead)}</p></div>
     <section class="empty">
-      <h2>Если у вас есть или появится жильё</h2>
-      <p>Налог на имущество не начисляют на 20 кв. м квартиры, 10 кв. м комнаты и 50 кв. м дома. Делать для этого ничего не нужно.</p>
-      <h2>Если вы платите НДФЛ</h2>
-      <p>Часть налога можно вернуть, если вы платили за лечение, обучение, спорт, покупку жилья или ипотеку. Например, вычет 150 000 руб. возвращает 19 500 руб.</p>
-      <a class="more" href="${LINKS.ndfl}" target="_blank" rel="noopener">Подробнее о вычетах на сайте ФНС</a>
+      ${T.emptyBlocks.map(([h, p]) => `<h2>${esc(h)}</h2><p>${esc(p)}</p>`).join("")}
+      <a class="more" href="${T.emptyLink[1]}" target="_blank" rel="noopener">${esc(T.emptyLink[0])}</a>
     </section>` : `
-    <div class="r-head"><h1>Вы можете претендовать на эти льготы</h1>
-      <p>Мы подобрали их по вашим ответам. Есть ли у вас право на льготу, окончательно решает налоговая.</p>
-      <ul class="summary"><li>Найдено: ${cards.length}</li><li>Без ваших действий: ${noAction}</li><li>Нужно действие: ${cards.length - noAction}</li></ul>
+    <div class="r-head"><h1>${esc(T.title)}</h1><p>${esc(T.lead)}</p>
+      <ul class="summary"><li>Найдено: ${m.cards.length}</li><li>Без ваших действий: ${m.noAction}</li><li>Нужно действие: ${m.cards.length - m.noAction}</li></ul>
     </div>`;
 
   const legend = `<details class="legend"><summary>Что значат метки</summary><dl>
-    ${usedLabels.map(l => `<dt><span class="badge ${LABELS[l].act ? "act" : "noact"}">${esc(LABELS[l].text)}</span></dt><dd>${esc(LABELS[l].about)}</dd>`).join("")}
+    ${m.usedLabels.map(l => `<dt><span class="badge ${LABELS[l].act ? "act" : "noact"}">${esc(LABELS[l].text)}</span></dt><dd>${esc(LABELS[l].about)}</dd>`).join("")}
   </dl></details>`;
 
-  const region = a.has("РЕГ") ? `<p class="note">Мы показываем льготы, которые действуют по всей России. В вашем регионе могут быть свои льготы по транспортному, земельному налогу и налогу на имущество. Их можно найти в сервисе ФНС «Справочная информация о ставках и льготах по имущественным налогам». <a href="${LINKS.service}" target="_blank" rel="noopener">Открыть сервис ФНС</a></p>` : "";
+  const region = m.region ? `<p class="note">${esc(T.region)} ${ext(T.regionLink)}</p>` : "";
 
-  const groups = GROUPS.map(([key, name]) => {
-    const list = cards.filter(c => c.group === key);
-    if (!list.length) return "";
-    let note = "";
-    if (key === "ndfl" && list.some(c => c.deduction)) {
-      note = `<div class="group-note">
-        <p>Вычет – это не сумма, которую вернут, а сумма, с которой пересчитают налог. Например, вычет 150 000 руб. возвращает 19 500 руб. Вернуть налог в упрощённом порядке можно не больше чем за 3 последних года.</p>
-        ${!a.has("ТД") ? `<p><strong>Важно для вас:</strong> вычет возвращает уже уплаченный НДФЛ. Он сработает, только если у вас есть доход, с которого платят НДФЛ, например зарплата. С доходов самозанятого НДФЛ не платят.</p>` : ""}
-      </div>`;
-    }
-    return `<section class="group" aria-labelledby="g-${key}"><h2 id="g-${key}">${name}</h2>${note}${list.map(cardHtml).join("")}</section>`;
+  const groups = m.groups.map(g => {
+    const note = g.deductionNote ? `<div class="group-note"><p>${esc(T.deduction)}</p>
+      ${m.noTd ? `<p><strong>Важно для вас:</strong> ${esc(T.noTd)}</p>` : ""}</div>` : "";
+    return `<section class="group" aria-labelledby="g-${g.key}"><h2 id="g-${g.key}">${g.name}</h2>${note}${g.list.map(cardHtml).join("")}</section>`;
   }).join("");
 
   app.innerHTML = `
   <div class="wrap result">
     <div class="print-only print-head" aria-hidden="true">
       <p class="print-title">Мои возможные налоговые льготы</p>
-      <p>Составлено помощником «Проверь свои налоговые льготы» по моим ответам. Учебный проект, не является консультацией налоговой службы. Информация верна на ${INFO_DATE}.</p>
+      <p>Составлено помощником «Проверь свои налоговые льготы» по моим ответам. ${esc(T.edu)}</p>
     </div>
     ${head}
     ${legend}
     ${region}
     ${groups}
-    ${showDuty(a) ? `<p class="duty">При обращении к нотариусу или в суд у вас тоже могут быть льготы.</p>` : ""}
+    ${m.duty ? `<p class="duty">${esc(T.duty)}</p>` : ""}
     <section class="notice" aria-labelledby="notice-h">
-      <h2 id="notice-h">Если льгота не учтена в налоговом уведомлении</h2>
-      <ol>
-        <li>Проверьте личный кабинет на сайте ФНС: раздел «Профиль», подраздел «Сведения», вкладка «Льготы».</li>
-        <li>Если нужной льготы там нет, подайте заявление по форме КНД 1150063. Это можно сделать в личном кабинете, в МФЦ, в любой налоговой инспекции или по почте. Прикладывать документы не обязательно.</li>
-        <li>Заявление рассматривают 30 дней. Налог пересчитают не больше чем за 3 последних года.</li>
-      </ol>
-      <a class="more" href="${LINKS.property}" target="_blank" rel="noopener">Как подать заявление – на сайте ФНС</a>
+      <h2 id="notice-h">${esc(T.noticeTitle)}</h2>
+      <ol>${T.noticeSteps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+      <a class="more" href="${T.noticeLink[1]}" target="_blank" rel="noopener">${esc(T.noticeLink[0])}</a>
     </section>
-    <p class="edu">Учебный проект. Не является консультацией налоговой службы. Информация верна на ${INFO_DATE}.</p>
+    <p class="edu">${esc(T.edu)}</p>
     <div class="actions">
+      <button class="btn primary" type="button" id="docx-btn">Скачать памятку (Word)</button>
+      <button class="btn ghost" type="button" id="print-btn">Распечатать</button>
       <button class="btn ghost" type="button" id="restart-btn">Начать заново</button>
-      <button class="btn primary" type="button" id="print-btn">Распечатать памятку</button>
     </div>
+    <p class="docx-note">Памятка создаётся прямо на вашем устройстве и никуда не отправляется. Файл откроется в Word и других редакторах документов, в том числе на телефоне.</p>
   </div>`;
+  app.querySelector("#docx-btn").addEventListener("click", downloadMemo);
+  app.querySelector("#print-btn").addEventListener("click", () => window.print());
   app.querySelector("#restart-btn").addEventListener("click", () => {
     state.answers = QUESTIONS.map(() => []);
     go("start");
   });
-  app.querySelector("#print-btn").addEventListener("click", () => window.print());
 }
 
 function renderAbout() {
@@ -759,7 +1016,7 @@ function renderAbout() {
     <p><strong>Зачем он нужен.</strong> Многие налоговые льготы налоговая учитывает сама. Но часть льгот и почти все вычеты по НДФЛ человек получает, только если сам знает о них и подаёт заявление или декларацию. Помощник подсказывает, на что вы можете претендовать и что для этого сделать.</p>
     <p><strong>На чём основан.</strong> Налоговый кодекс РФ (в редакции на 14.11.2026), закон Санкт-Петербурга № 81-11 «О налоговых льготах» (в редакции от 23.04.2025), закон № 422-ФЗ о налоге для самозанятых, материалы сайта ФНС России. Все источники перечислены в работе.</p>
     <p><strong>Что помощник не проверяет.</strong> Здесь самые распространённые льготы. В вопросах нет, например, военнослужащих с выслугой 20 лет, членов семей погибших военнослужащих, детей-сирот, малоимущих. Если вы относитесь к другим категориям, посмотрите <a href="${LINKS.service}" target="_blank" rel="noopener">сервис ФНС «Справочная информация о ставках и льготах по имущественным налогам»</a>.</p>
-    <p>Ваши ответы никуда не отправляются и не сохраняются. Всё считается на вашем устройстве и исчезает, когда вы закрываете страницу.</p>
+    <p>Ваши ответы никуда не отправляются и не сохраняются. Всё считается на вашем устройстве и исчезает, когда вы закрываете страницу. Памятка в Word тоже создаётся на вашем устройстве и сохраняется, только если вы сами её скачаете.</p>
     <p>Это учебный проект, а не консультация налоговой службы. Информация верна на ${INFO_DATE}.</p>
     <button class="btn ghost" type="button" id="about-back">Вернуться</button>
   </div>`;
