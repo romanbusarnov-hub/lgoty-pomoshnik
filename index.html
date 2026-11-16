@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Учебный помощник: ответьте на 8 вопросов и узнайте, на какие налоговые льготы и вычеты вы можете претендовать.">
+<meta name="theme-color" content="#0B2E59">
+<title>Проверь свои налоговые льготы</title>
+<style>
+:root{
+  --navy:#0B2E59; --blue:#1D5FA8; --bg:#EEF3F9; --ink:#13233A; --muted:#4A5B72;
+  --line:#D3DEEA; --line-strong:#8FA3BC; --white:#fff;
+  --accent:#C2410C; --accent-tint:#FDEADB; --accent-ink:#8A2C06; --accent-soft:#FFF7F2;
+  --blue-tint:#DCE9F7; --link:#1D5FA8; --focus:#F59E0B;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;min-width:320px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:17px;line-height:1.5;color:var(--ink);background:var(--bg);overflow-wrap:break-word}
+h1,h2,h3{line-height:1.25;margin:0}
+p{margin:0}
+a{color:var(--link)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+[tabindex="-1"]:focus{outline:none}
+
+/* шапка */
+.top{background:var(--navy);color:#fff;padding-top:env(safe-area-inset-top)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px}
+.brand{font-weight:700;font-size:16px;color:#fff;text-decoration:none}
+.tag{font-size:13px;font-weight:600;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);padding:3px 10px;border-radius:999px;white-space:nowrap}
+
+/* кнопки */
+.btn{font:inherit;font-weight:600;min-height:52px;padding:0 22px;border-radius:10px;cursor:pointer;border:2px solid transparent;text-align:center;-webkit-tap-highlight-color:transparent}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--navy);border-color:var(--line-strong)}
+.btn.ghost:hover{background:#fff}
+
+/* старт */
+.start{padding-top:32px;padding-bottom:24px}
+.start h1{font-size:30px;color:var(--navy)}
+.lead{font-size:19px;margin-top:12px}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding:0;list-style:none}
+.facts li{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:15px;font-weight:600;color:var(--navy)}
+.start .go{width:100%;margin-top:24px;font-size:19px;min-height:56px}
+.learn{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:28px}
+.learn h2{font-size:19px;color:var(--navy)}
+.learn ul{list-style:none;margin:10px 0 0;padding:0}
+.learn li{position:relative;padding-left:22px;margin-top:10px}
+.learn li::before{content:"";position:absolute;left:2px;top:.55em;width:9px;height:9px;border-radius:50%;background:var(--blue)}
+.spbnote{margin-top:16px;color:var(--muted)}
+.edubox{border:2px dashed var(--line-strong);border-radius:14px;padding:14px 16px;margin-top:24px;font-size:15px;color:var(--muted)}
+.edubox strong{color:var(--ink)}
+
+/* вопрос */
+.q-main{padding-bottom:24px}
+.progress{margin:22px 0 6px;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--blue);border-radius:3px}
+.step{font-size:15px;color:var(--muted);font-weight:600}
+.q h1{font-size:24px;margin:10px 0 4px}
+.hint{color:var(--muted);margin-bottom:16px}
+.opts{display:grid;gap:10px}
+.opt{position:relative;display:flex;align-items:center;gap:14px;min-height:56px;padding:12px 16px;background:#fff;border:2px solid var(--line);border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.opt:hover{border-color:var(--line-strong)}
+.opt input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.opt .box{flex:none;width:24px;height:24px;border:2px solid var(--line-strong);border-radius:6px;background:#fff;display:grid;place-items:center}
+.opt.radio .box{border-radius:50%}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt.on .box{background:var(--accent);border-color:var(--accent)}
+.opt.on .box::after{content:"";width:6px;height:12px;border:solid #fff;border-width:0 3px 3px 0;transform:translateY(-2px) rotate(45deg)}
+.opt.radio.on .box::after{width:10px;height:10px;border:0;border-radius:50%;background:#fff;transform:none}
+.opt:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.error{margin-top:14px;color:#B42318;font-weight:600}
+.error:empty{display:none}
+.navbar{display:flex;gap:12px}
+.navbar .btn{flex:1}
+
+/* результат */
+.r-head{padding:26px 0 8px}
+.r-head h1{font-size:26px;color:var(--navy)}
+.r-head p{margin-top:8px;color:var(--muted)}
+.summary{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0;padding:0;list-style:none}
+.summary li{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:15px;font-weight:600}
+.legend{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.legend summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--navy);min-height:48px;display:flex;align-items:center}
+.legend dl{margin:0;padding:0 16px 14px}
+.legend dt{margin-top:10px}
+.legend dd{margin:4px 0 0;color:var(--muted);font-size:16px}
+.note{background:#fff;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 16px;margin-top:20px}
+.note a{font-weight:600}
+.group{margin-top:28px}
+.group > h2{font-size:21px;color:var(--navy)}
+.group-note{margin-top:10px;color:var(--muted);font-size:16px}
+.group-note p + p{margin-top:6px}
+.group-note strong{color:var(--ink)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:12px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.badge,.spb{display:inline-block;font-size:14px;font-weight:600;line-height:1.3;padding:4px 10px;border-radius:999px}
+.badge.noact{background:var(--blue-tint);color:var(--navy)}
+.badge.act{background:var(--accent-tint);color:var(--accent-ink)}
+.spb{color:var(--navy);border:1.5px solid var(--navy);padding:2.5px 9px}
+.card h3{font-size:19px;margin-bottom:6px}
+.row{margin-top:6px}
+.k{font-weight:600;color:var(--muted)}
+.extra{margin-top:8px;padding:8px 12px;background:var(--bg);border-radius:8px;font-size:16px}
+.more{display:inline-block;margin-top:12px;font-weight:600;padding:2px 0}
+.duty{margin-top:24px;font-weight:600}
+.notice{background:#fff;border:2px solid var(--blue);border-radius:14px;padding:18px;margin-top:28px}
+.notice h2{font-size:19px;color:var(--navy)}
+.notice ol{margin:10px 0 0;padding-left:22px}
+.notice li{margin-top:6px}
+.notice .more{margin-top:10px}
+.edu{font-size:15px;color:var(--muted);margin-top:24px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 8px}
+.actions .btn{flex:1 1 200px}
+.empty{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:20px}
+.empty h2{font-size:18px;color:var(--navy);margin-top:14px}
+.empty h2:first-child{margin-top:0}
+.empty p{margin-top:6px}
+.print-only{display:none}
+
+/* о проекте */
+.about h1{font-size:28px;color:var(--navy);padding-top:28px}
+.about p{margin-top:14px}
+.about .btn{margin-top:24px}
+
+/* подвал */
+.foot{padding-top:16px;padding-bottom:calc(32px + env(safe-area-inset-bottom));font-size:15px;color:var(--muted)}
+.foot a{font-weight:600;display:inline-block;padding:12px 0}
+
+/* телефон (и телефон боком): кнопки «Назад / Далее» закреплены внизу */
+@media (max-width:767px), (max-height:500px){
+  .navbar.fixed{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:#fff;border-top:1px solid var(--line)}
+  .has-fixed-nav .foot{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+}
+/* планшет и компьютер */
+@media (min-width:768px){
+  body{font-size:18px}
+  .start{padding-top:56px}
+  .start h1{font-size:40px}
+  .lead{font-size:21px}
+  .start .go{width:auto;min-width:240px}
+  .q h1{font-size:30px}
+  .r-head h1{font-size:32px}
+  .navbar{margin-top:28px}
+  .navbar .btn{flex:0 0 auto;min-width:160px}
+  .navbar .btn.primary{margin-left:auto}
+}
+/* альбомная ориентация на телефоне: панель кнопок ниже */
+@media (max-height:500px){
+  .navbar.fixed{padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  .navbar.fixed .btn{min-height:48px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* печать памятки: только результат, чёрно-белый, без кнопок */
+@media print{
+  @page{margin:15mm}
+  :root{--navy:#000;--blue:#000;--ink:#000;--muted:#000;--line:#000;--link:#000}
+  body{background:#fff;font-size:11pt;color:#000}
+  .top,.foot,.actions,.summary,.legend summary{display:none!important}
+  .print-only{display:block}
+  .wrap{max-width:none;padding:0}
+  .print-head .print-title{font-size:18pt;font-weight:700;margin:0}
+  .print-head p{margin-top:4pt}
+  .r-head{display:none}
+  .legend{border:1px solid #000;border-radius:0;margin-top:10pt}
+  .legend dl{padding:6pt 8pt}
+  .legend dd{color:#000}
+  .group{margin-top:14pt}
+  .group > h2{font-size:14pt;break-after:avoid}
+  .card,.notice,.note,.empty{border:1px solid #000;border-radius:0;background:#fff;break-inside:avoid;padding:8pt;margin-top:6pt}
+  .note{border-left-width:3px}
+  .badge,.spb{background:#fff!important;color:#000!important;border:1px solid #000;font-size:9pt}
+  .extra{background:#fff;border:1px dashed #000}
+  .card h3{font-size:12pt}
+  a{color:#000;text-decoration:none}
+  a.more::after{content:" – " attr(href);font-weight:400;word-break:break-all}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <span class="brand">Проверь свои налоговые льготы</span>
+    <span class="tag">Учебный проект</span>
+  </div>
+</header>
+<main id="app"></main>
+<footer class="foot wrap"><a href="#" id="about-link">О проекте</a></footer>
+<noscript><div class="wrap"><p class="note">Для работы помощника включите JavaScript в браузере.</p></div></noscript>
+
+<script>
+"use strict";
+/* =====================================================================
+   ДАННЫЕ ПОМОЩНИКА
+   Здесь всё, что может понадобиться исправить: дата, вопросы, адреса,
+   льготы и правила подбора. Источник правил – файл «правила подбора.md»
+   (номера карточек И1, З1, Т1, Н1, С1 те же). Тексты – «тексты сайта.md».
+   ===================================================================== */
+
+const INFO_DATE = "15.11.2026";
+
+/* ---------- Вопросы ----------
+   multi: можно выбрать несколько; exclusive: ответ, который снимает остальные */
+const QUESTIONS = [
+  { title: "Где вы зарегистрированы по месту жительства?",
+    hint: "У Санкт-Петербурга есть свои льготы. Их дают только тем, у кого регистрация в городе.",
+    options: [["СПб", "В Санкт-Петербурге"], ["РЕГ", "В другом регионе"]] },
+  { title: "Что из этого относится к вам?", multi: true, exclusive: "НЕТ2",
+    hint: "Можно выбрать несколько вариантов. Например, если вы получаете пенсию и у вас есть инвалидность, отметьте оба пункта.",
+    options: [["ПЕН", "Получаю пенсию"], ["ПРЕД", "Предпенсионный возраст"], ["ИНВ1", "Инвалид I группы"],
+      ["ИНВ2", "Инвалид II группы"], ["ИНВД", "Инвалид с детства"], ["РИНВ", "Родитель (опекун) ребёнка-инвалида"],
+      ["ВБД", "Ветеран боевых действий"], ["СВО", "Участник СВО или член его семьи"],
+      ["ВОВ", "Ветеран или инвалид Великой Отечественной войны"],
+      ["ГЕР", "Герой СССР или России, полный кавалер ордена Славы"],
+      ["РАД", "Пострадал от радиации (Чернобыльская АЭС и др.)"],
+      ["ГТО", "Сдал(а) нормы ГТО и получил(а) знак отличия"], ["НЕТ2", "Ничего из этого"]] },
+  { title: "Сколько у вас детей до 18 лет (или до 24 лет, если учатся очно)?",
+    hint: "Считайте и усыновлённых детей, и детей, над которыми вы опекун. Для разных льгот возраст детей считают по-разному, это написано в каждой льготе.",
+    options: [["Д0", "Нет"], ["Д1", "1"], ["Д2", "2"], ["Д3", "3 и больше"]] },
+  { title: "Что у вас есть в собственности?", multi: true, exclusive: "НЕТ4",
+    hint: "Можно выбрать несколько вариантов. Доля в обычной квартире считается как квартира.",
+    options: [["КВ", "Квартира или комната"], ["ДОМ", "Жилой дом"], ["КОМ", "Доля в коммунальной квартире"],
+      ["ГАР", "Гараж или машино-место"], ["УЧ", "Земельный участок"],
+      ["ХОЗ", "Хозяйственная постройка до 50 кв. м на садовом или дачном участке"], ["НЕТ4", "Ничего из этого"]] },
+  { title: "Есть ли у вас транспорт?", multi: true, exclusive: "НЕТ5",
+    hint: "Можно выбрать несколько вариантов. Мощность двигателя указана в ПТС и в свидетельстве о регистрации машины.",
+    options: [["НЕТ5", "Нет"], ["Т150", "Легковой автомобиль до 150 л. с."], ["Т200", "Легковой автомобиль 150–200 л. с."],
+      ["Т200+", "Легковой автомобиль больше 200 л. с."], ["МОТО", "Мотоцикл"], ["ЛОД", "Моторная лодка или катер"]] },
+  { title: "Как вы получаете доход?", multi: true, exclusive: "НЕТ",
+    hint: "Можно выбрать несколько вариантов, например если вы работаете по договору и ещё самозанятый.",
+    options: [["ТД", "Работаю по трудовому договору"], ["НПД", "Самозанятый"], ["ИП", "Индивидуальный предприниматель"],
+      ["НЕТ", "Сейчас не работаю (пенсия, учёба и т. п.)"]] },
+  { title: "Какие расходы были у вас или вашей семьи за последние 3 года?", multi: true, exclusive: "НЕТ7",
+    hint: "Можно выбрать несколько вариантов. Считаются расходы на себя, детей, супруга и родителей. Вернуть налог можно за 3 последних года.",
+    options: [["ЛЕЧ", "Лечение или лекарства"], ["ОБУЧ", "Обучение (своё, детей, брата или сестры)"], ["СПОРТ", "Фитнес или спорт"],
+      ["ЖИЛ", "Покупка или строительство жилья"], ["ИПОТ", "Проценты по ипотеке"],
+      ["СБЕР", "Взносы на ИИС, в НПФ, долгосрочные сбережения"], ["БЛАГ", "Благотворительность"],
+      ["НЕТ7", "Ничего из этого"]] },
+  { title: "Продавали ли вы жильё, участок или машину в этом или прошлом году?",
+    hint: "Если вы владели вещью достаточно долго, платить налог с продажи не нужно.",
+    options: [["ПРОД", "Да"], ["НЕТ8", "Нет"]] }
+];
+
+/* ---------- Метки способа получения ---------- */
+const LABELS = {
+  auto:     { text: "Без заявления", act: false,
+              about: "Налоговая учтёт льготу сама: сведения о вас ей передают другие ведомства." },
+  none:     { text: "Действий не требуется", act: false,
+              about: "Льгота работает для всех, делать ничего не нужно." },
+  knd:      { text: "Заявление по форме КНД 1150063", act: true,
+              about: "Один раз подайте заявление в налоговую. Каждый год подавать не нужно." },
+  decl:     { text: "Декларация 3-НДФЛ", act: true,
+              about: "После конца года подайте декларацию о доходах с документами о расходах." },
+  simple:   { text: "Упрощённый порядок", act: true,
+              about: "Готовое заявление само появится в личном кабинете на сайте ФНС, его нужно только подтвердить." },
+  employer: { text: "Через работодателя", act: true,
+              about: "Попросите бухгалтерию на работе: налог сразу будут удерживать меньше." },
+  mynalog:  { text: "Регистрация в «Мой налог»", act: true,
+              about: "Зарегистрируйтесь в бесплатном приложении ФНС «Мой налог»." }
+};
+
+/* ---------- Адреса ссылок (номера – из «правила подбора.md», раздел 7) ---------- */
+const LINKS = {
+  nk:        "https://base.garant.ru/10900200/",                                        // [2] НК РФ
+  ndfl:      "https://www.nalog.gov.ru/rn78/taxation/taxes/ndfl/nalog_vichet/",          // [10]
+  study:     "https://www.nalog.gov.ru/rn78/taxation/taxes/ndfl/nalog_vichet/soc_nv/soc_nv_ob/", // [15]
+  npd:       "https://base.garant.ru/72113648/",                                         // [18] 422-ФЗ
+  svo:       "https://www.nalog.gov.ru/rn05/news/activities_fts/16604006/",              // [Н1]
+  property:  "https://www.nalog.gov.ru/rn78/fl/pay_taxes/flat/privilege/",               // [Н3]
+  service:   "https://www.nalog.gov.ru/rn78/service/tax/",                               // [Н4]
+  calc:      "https://www.nalog.gov.ru/rn78/service/nalog_calc/",                        // [Н6]
+  childinv:  "https://www.nalog.gov.ru/rn78/news/activities_fts/15078029/"               // [Н7]
+};
+const LINK_FNS = "Подробнее на сайте ФНС";
+const LINK_NK = "Подробнее в Налоговом кодексе";
+const LINK_NPD = "Подробнее в законе о самозанятых";
+
+/* ---------- Группы налогов (порядок на экране) ---------- */
+const GROUPS = [
+  ["property", "Налог на имущество"],
+  ["land", "Земельный налог"],
+  ["transport", "Транспортный налог"],
+  ["ndfl", "НДФЛ: вычеты и доходы без налога"],
+  ["npd", "Налог для самозанятых"]
+];
+
+/* ---------- Наборы ответов для правил ---------- */
+const FED_PROP  = ["ПЕН", "ПРЕД", "ИНВ1", "ИНВ2", "ИНВД", "ВБД", "СВО", "ВОВ", "ГЕР", "РАД"]; // льготники ст. 407, 391
+const AUTO_CATS = ["ПЕН", "ПРЕД", "ИНВ1", "ИНВ2", "ВБД", "СВО", "ВОВ", "РАД"];              // сведения приходят сами
+const INV  = ["ИНВ1", "ИНВ2", "ИНВД"];
+const CAR  = ["Т150", "Т200", "Т200+"];
+const ANY_TS = ["Т150", "Т200", "Т200+", "МОТО", "ЛОД"];
+const HOME = ["КВ", "КОМ", "ДОМ"];
+const STRONG_CAR = ["Т200", "Т200+"];
+
+const SPB_TRANSPORT = "Машина, зарегистрированная с 2020 года, должна быть сделана в странах ЕАЭС. Если оснований для льготы несколько, дадут одну на выбор. Долг по налогам – не больше 10 % суммы льготы.";
+const OLD_CAR = "Ваша машина мощнее 150 л. с., поэтому льгота подойдёт, только если ей больше 15 лет.";
+const SILOVIKI = "Если вы получаете пенсию от силового ведомства (МВД, Минобороны и др.), подайте заявление.";
+
+/* ---------- Льготы и правила подбора ----------
+   Поля: id, group, title, spb (только для СПб), labels(a), give, who, cond,
+   extra – дополнительные строки {when, text}, link [текст, адрес], show(a) – когда показывать.
+   В правилах: a.has("КОД") – выбран ли ответ; any(a, [...]) – выбран ли хотя бы один. */
+const any = (a, codes) => codes.some(c => a.has(c));
+
+const BENEFITS = [
+  /* --- Налог на имущество --- */
+  { id: "И1", group: "property", title: "Освобождение от налога на имущество",
+    show: a => any(a, FED_PROP) && any(a, ["КВ", "КОМ", "ДОМ", "ГАР"]),
+    labels: a => any(a, AUTO_CATS) ? ["auto"] : ["knd"],
+    give: "Налог не платят за одну квартиру или комнату, один дом и один гараж или машино-место – по одному объекту каждого вида.",
+    who: "Пенсионерам, предпенсионерам, инвалидам, ветеранам, участникам СВО и их семьям, Героям и другим – всего 16 групп.",
+    cond: "Если квартир (домов, гаражей) несколько, до 31 декабря сообщите налоговой, к какой применить льготу. Иначе она выберет ту, где налог больше. Льгота не действует, если в объекте ведётся бизнес или он стоит дороже 300 млн руб.",
+    extra: [
+      { when: a => !any(a, AUTO_CATS), text: "Сведений о вашем праве у налоговой может не быть. Подайте заявление один раз, дальше льгота будет действовать сама." },
+      { when: a => a.has("ПЕН"), text: SILOVIKI },
+      { when: a => a.has("РАД"), text: "Если вы пострадали при ядерных испытаниях или работах с ядерными установками, подайте заявление." },
+      { when: a => a.has("ВОВ"), text: "Ветеранам войны – если вы служили в действующей армии или были партизаном. Инвалидам войны – без этого условия." }
+    ],
+    link: [LINK_FNS, LINKS.property] },
+  { id: "И2", group: "property", title: "Хозяйственная постройка до 50 кв. м",
+    show: a => a.has("ХОЗ"), labels: () => ["auto"],
+    give: "Налог за постройку не платят.",
+    who: "Владельцам построек до 50 кв. м на участке для сада, огорода, подсобного хозяйства или строительства дома.",
+    link: [LINK_FNS, LINKS.property] },
+  { id: "И3", group: "property", title: "Вычет из кадастровой стоимости",
+    show: a => any(a, HOME), labels: () => ["none"],
+    give: "Налог не начисляют на 20 кв. м квартиры, 10 кв. м комнаты и 50 кв. м дома. Если жильё меньше, налога нет совсем.",
+    who: "Всем владельцам жилья. Если у вас доля, вычет делится по долям.",
+    link: [LINK_FNS, LINKS.calc] },
+  { id: "И4", group: "property", title: "Дополнительный вычет для многодетных",
+    show: a => a.has("Д3") && any(a, HOME), labels: () => ["auto"],
+    give: "Налог не начисляют ещё на 5 кв. м квартиры или комнаты и 7 кв. м дома за каждого ребёнка.",
+    who: "Родителям трёх и более детей до 18 лет. С 2026 года считаются и дети до 23 лет, которые учатся очно.",
+    cond: "Вычет даётся на одну квартиру или комнату и один дом.",
+    link: [LINK_FNS, LINKS.property] },
+  { id: "И5", group: "property", spb: true, title: "Меньше налога за долю в коммунальной квартире",
+    show: a => a.has("СПб") && a.has("КОМ"), labels: () => ["knd"],
+    give: "Налог уменьшается на сумму налога с 10 кв. м.",
+    who: "Владельцам долей в коммунальных квартирах, полученных при приватизации или купленных позже.",
+    cond: "Долг по налогам – не больше 10 % суммы льготы.",
+    link: [LINK_FNS, LINKS.service] },
+  { id: "И6", group: "property", spb: true, title: "Освобождение машино-места",
+    show: a => a.has("СПб") && a.has("ГАР") && any(a, FED_PROP), labels: () => ["knd"],
+    give: "Налог не платят за место в одном гараже или паркинге.",
+    who: "Тем, у кого есть федеральная льгота по налогу на имущество и доля в гараже или паркинге, которая используется как машино-место.",
+    cond: "Федеральная льгота ещё не применена к вашему гаражу или машино-месту.",
+    link: [LINK_FNS, LINKS.service] },
+
+  /* --- Земельный налог --- */
+  { id: "З1", group: "land", title: "Вычет 600 кв. м («шесть соток»)",
+    show: a => a.has("УЧ") && (any(a, FED_PROP) || a.has("Д3")), labels: () => ["auto"],
+    give: "Налог не берут с 600 кв. м участка. Если участок не больше 6 соток, налога нет.",
+    who: "Пенсионерам, предпенсионерам, инвалидам, ветеранам, участникам СВО и их семьям, Героям, пострадавшим от радиации, многодетным.",
+    cond: "Вычет даётся на один участок. Если участков несколько, до 31 декабря сообщите налоговой, к какому его применить. Иначе она выберет участок, где налог больше.",
+    extra: [{ when: a => a.has("Д3"), text: "Многодетным с 2026 года считаются и дети до 23 лет, которые учатся очно." }],
+    link: [LINK_NK, LINKS.nk] },
+  { id: "З2", group: "land", spb: true, title: "Освобождение от земельного налога",
+    show: a => a.has("СПб") && a.has("УЧ") && any(a, ["ГЕР", "ИНВ1", "ИНВД", "РИНВ", "Д3", "ВОВ", "ВБД", "РАД"]),
+    labels: a => any(a, ["ИНВ1", "ИНВД", "ВОВ", "ВБД", "РАД", "Д3"]) ? ["auto"] : ["knd"],
+    give: "Налог за один участок в Санкт-Петербурге не платят совсем.",
+    who: "Героям, инвалидам I группы, инвалидам с детства, ветеранам и инвалидам войны и боевых действий, пострадавшим от радиации, одному из родителей ребёнка-инвалида и одному из родителей в многодетной семье.",
+    cond: "Участок и постройки на нём не сданы в аренду. Долг по налогам – не больше 10 % суммы льготы. Если к участку уже применён вычет 600 кв. м, освобождение даётся на этот же участок.",
+    extra: [{ when: a => a.has("Д3"), text: "Многодетной считается семья с тремя детьми до 18 лет или до 23 лет, если все дети старше 18 лет учатся очно. Если кому-то из троих детей больше 18 лет, подайте заявление со справкой об очной учёбе." }],
+    link: [LINK_FNS, LINKS.service] },
+  { id: "З3", group: "land", spb: true, title: "Освобождение для пенсионеров",
+    show: a => a.has("СПб") && a.has("УЧ") && a.has("ПЕН"), labels: () => ["auto"],
+    give: "Налог за участок площадью до 2 500 кв. м не платят.",
+    who: "Пенсионерам, а также мужчинам с 60 лет и женщинам с 55 лет.",
+    cond: "Участок не сдан в аренду. Долг по налогам – не больше 10 % суммы льготы. " + SILOVIKI,
+    link: [LINK_FNS, LINKS.service] },
+
+  /* --- Транспортный налог --- */
+  { id: "Т1", group: "transport", title: "Освобождение от транспортного налога",
+    show: a => any(a, ANY_TS) && any(a, ["ВБД", "СВО", "ГЕР"]),
+    labels: a => any(a, ["ВБД", "СВО"]) ? ["auto"] : ["knd"],
+    give: "Налог не платят за одно транспортное средство по вашему выбору.",
+    who: a => [
+      any(a, ["ВБД", "СВО"]) ? "Ветеранам боевых действий, участникам СВО и их семьям – начиная с налога за 2022 год." : "",
+      a.has("ГЕР") ? "Героям СССР и России, полным кавалерам ордена Славы – начиная с налога за 2026 год." : ""
+    ].filter(Boolean).join(" "),
+    cond: "Не действует для легковых машин средней стоимостью от 10 млн руб. и для катеров (на моторные лодки действует). Если машин несколько, сообщите налоговой, к какой применить льготу. Иначе она выберет ту, где налог больше.",
+    link: [LINK_FNS, LINKS.svo] },
+  { id: "Т2", group: "transport", title: "Транспорт, с которого не берут налог",
+    show: a => (any(a, INV) && any(a, CAR)) || a.has("ЛОД"), labels: () => ["none"],
+    give: "Налог не начисляют совсем.",
+    who: a => [
+      any(a, INV) && any(a, CAR) ? "Владельцам машин, специально оборудованных для инвалидов, а также машин до 100 л. с., полученных через соцзащиту." : "",
+      a.has("ЛОД") ? "Владельцам моторных лодок с двигателем до 5 л. с." : ""
+    ].filter(Boolean).join(" "),
+    link: [LINK_NK, LINKS.nk] },
+  { id: "Т3", group: "transport", spb: true, title: "Освобождение для Героев",
+    show: a => a.has("СПб") && a.has("ГЕР") && any(a, ["Т150", "Т200", "МОТО", "ЛОД"]), labels: () => ["knd"],
+    give: "Налог не платят за одно транспортное средство мощностью до 200 л. с.",
+    who: "Героям СССР, России, Социалистического Труда, полным кавалерам орденов Славы и Трудовой Славы.",
+    cond: SPB_TRANSPORT,
+    link: [LINK_FNS, LINKS.service] },
+  { id: "Т4", group: "transport", spb: true, title: "Освобождение для ветеранов, инвалидов и пострадавших от радиации",
+    show: a => a.has("СПб") && any(a, ["ВОВ", "ВБД", "ИНВ1", "ИНВ2", "РАД"]) && any(a, ANY_TS), labels: () => ["auto"],
+    give: "Налог не платят за одно транспортное средство мощностью до 150 л. с. или старше 15 лет.",
+    who: "Ветеранам и инвалидам войны и боевых действий, инвалидам I и II группы, пострадавшим от радиации.",
+    cond: SPB_TRANSPORT,
+    extra: [
+      { when: a => any(a, STRONG_CAR), text: OLD_CAR },
+      { when: a => a.has("РАД"), text: "Если вы пострадали при ядерных испытаниях, подайте заявление." }
+    ],
+    link: [LINK_FNS, LINKS.service] },
+  { id: "Т5", group: "transport", spb: true, title: "Освобождение для пенсионеров",
+    show: a => a.has("СПб") && a.has("ПЕН") && any(a, ["Т150", "МОТО", "ЛОД"]), labels: () => ["auto"],
+    give: "Налог не платят за один мотоцикл или мотороллер и за один легковой автомобиль до 150 л. с. (или катер, моторную лодку до 30 л. с.).",
+    who: "Пенсионерам, а также мужчинам с 60 лет и женщинам с 55 лет.",
+    cond: "Машина, зарегистрированная до 2020 года, должна быть сделана в России или СССР. Яхты и гидроциклы не входят. " + SPB_TRANSPORT,
+    extra: [{ when: () => true, text: SILOVIKI }],
+    link: [LINK_FNS, LINKS.service] },
+  { id: "Т6", group: "transport", spb: true, title: "Освобождение для многодетных",
+    show: a => a.has("СПб") && a.has("Д3") && any(a, ["Т150", "МОТО", "ЛОД"]), labels: () => ["auto"],
+    give: "Налог не платят за одно транспортное средство мощностью до 150 л. с.",
+    who: "Одному из родителей (опекунов) в семье с тремя детьми до 18 лет или до 23 лет, если все дети старше 18 лет учатся очно.",
+    cond: "Если кому-то из троих детей больше 18 лет, подайте заявление со справкой об очной учёбе. Страна, где сделана машина, значения не имеет. Если оснований для льготы несколько, дадут одну на выбор. Долг по налогам – не больше 10 % суммы льготы.",
+    link: [LINK_FNS, LINKS.service] },
+  { id: "Т7", group: "transport", spb: true, title: "Освобождение для родителей детей-инвалидов",
+    show: a => a.has("СПб") && a.has("РИНВ") && any(a, ANY_TS), labels: () => ["knd"],
+    give: "Налог не платят за одно транспортное средство мощностью до 150 л. с. или старше 15 лет.",
+    who: "Родителям, усыновителям, опекунам детей-инвалидов – пока ребёнку не исполнится 18 лет.",
+    cond: "К заявлению приложите копии свидетельства о рождении (или документа об опеке) и справки об инвалидности. Страна, где сделана машина, значения не имеет.",
+    extra: [{ when: a => any(a, STRONG_CAR), text: OLD_CAR }],
+    link: [LINK_FNS, LINKS.childinv] },
+
+  /* --- НДФЛ: вычеты --- */
+  { id: "Н3", group: "ndfl", deduction: true, title: "Вычет на детей",
+    show: a => any(a, ["Д1", "Д2", "Д3", "РИНВ"]), labels: () => ["employer", "decl"],
+    give: "Каждый месяц налог считают с меньшей суммы: на 1 400 руб. меньше за первого ребёнка, на 2 800 руб. – за второго, на 6 000 руб. – за третьего и следующих, на 12 000 руб. – за ребёнка-инвалида.",
+    who: "Родителям, их супругам, усыновителям и опекунам.",
+    cond: "Действует, пока ваш доход с начала года не больше 450 000 руб. Единственному родителю вычет дают в двойном размере. Если у работодателя есть сведения о ваших детях, вычет дадут и без заявления.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н4", group: "ndfl", deduction: true, title: "Вычет «на себя»",
+    show: a => any(a, ["ГЕР", "РАД"]), labels: () => ["employer", "decl"],
+    give: a => [
+      a.has("ГЕР") ? "Героям: каждый месяц налог считают с суммы на 500 руб. меньше." : "",
+      a.has("РАД") ? "Получившим лучевую болезнь: каждый месяц налог считают с суммы на 3 000 руб. меньше." : ""
+    ].filter(Boolean).join(" "),
+    who: "Героям СССР и России; тем, кто получил лучевую болезнь из-за аварии на Чернобыльской АЭС.",
+    cond: "Если подходят оба вычета, дают больший.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н5", group: "ndfl", deduction: true, title: "Вычет за ГТО",
+    show: a => a.has("ГТО"), labels: () => ["employer", "decl"],
+    give: "Налог считают с суммы на 18 000 руб. меньше за год.",
+    who: "Тем, кто сдал нормы ГТО и получил (или подтвердил) знак отличия.",
+    cond: "В том же году нужно пройти диспансеризацию или профилактический осмотр.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н6", group: "ndfl", deduction: true, title: "Вычет на обучение",
+    show: a => a.has("ОБУЧ"), labels: () => ["decl", "employer", "simple"],
+    give: "Можно вернуть часть налога. За своё обучение и обучение брата или сестры учитывают до 150 000 руб. в год вместе с другими такими вычетами, за обучение ребёнка – до 110 000 руб. на каждого.",
+    who: "За себя, брата или сестру до 24 лет (очно), детей до 24 лет (очно), подопечных до 18 лет.",
+    link: [LINK_FNS, LINKS.study] },
+  { id: "Н7", group: "ndfl", deduction: true, title: "Вычет на лечение и лекарства",
+    show: a => a.has("ЛЕЧ"), labels: () => ["decl", "employer", "simple"],
+    give: "Можно вернуть часть налога. Учитывают до 150 000 руб. расходов в год вместе с другими такими вычетами, дорогое лечение – без ограничения.",
+    who: "За себя, супруга, родителей, детей до 18 лет (до 24 лет, если учатся очно).",
+    cond: "В упрощённом порядке – кроме лекарств.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н8", group: "ndfl", deduction: true, title: "Вычет за спорт",
+    show: a => a.has("СПОРТ"), labels: () => ["decl", "employer", "simple"],
+    give: "Можно вернуть часть налога. Учитывают до 150 000 руб. в год вместе с другими такими вычетами.",
+    who: "За себя, детей до 18 лет (до 24 лет, если учатся очно), родителей-пенсионеров.",
+    cond: "Спортклуб и услуга должны быть в официальных перечнях.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н9", group: "ndfl", deduction: true, title: "Вычет за благотворительность",
+    show: a => a.has("БЛАГ"), labels: () => ["decl"],
+    give: "Можно вернуть часть налога. Учитывают пожертвования до 25 % вашего дохода за год.",
+    who: "Тем, кто жертвовал деньги.",
+    cond: "Этот вычет дают только через декларацию.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н10", group: "ndfl", deduction: true, title: "Вычет на долгосрочные сбережения",
+    show: a => a.has("СБЕР"), labels: () => ["simple", "decl"],
+    give: "Можно вернуть часть налога. Учитывают взносы до 400 000 руб. в год.",
+    who: "Подходит, если вы платите взносы в НПФ (с 2025 года), по программе долгосрочных сбережений, на ИИС, открытый с 2024 года, или по страхованию жизни на 10 лет и больше (с 1 сентября 2026 года).",
+    cond: "Если платите и за детей, учитывают до 500 000 руб. в год.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н11", group: "ndfl", deduction: true, title: "Вычет по ИИС, открытому до 2024 года",
+    show: a => a.has("СБЕР"), labels: () => ["decl", "simple"],
+    give: "Можно вернуть часть налога. Учитывают взносы до 400 000 руб. в год.",
+    who: "Подходит, если ваш ИИС открыт до 31 декабря 2023 года.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н12", group: "ndfl", deduction: true, title: "Вычет на пенсионное страхование",
+    show: a => a.has("СБЕР"), labels: () => ["decl", "employer", "simple"],
+    give: "Можно вернуть часть налога. Учитывают до 150 000 руб. в год вместе с другими такими вычетами.",
+    who: "Подходит, если вы платите взносы по добровольному пенсионному страхованию или дополнительные взносы на накопительную пенсию.",
+    cond: "В упрощённом порядке – только для добровольного пенсионного страхования.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н13", group: "ndfl", deduction: true, title: "Вычет при покупке жилья",
+    show: a => a.has("ЖИЛ"), labels: () => ["decl", "employer", "simple"],
+    give: "Можно вернуть часть налога. Учитывают расходы до 2 000 000 руб. Если потратили меньше, остаток можно использовать при следующей покупке.",
+    who: "Тем, кто купил или построил жильё.",
+    cond: "Не учитываются деньги работодателя, других людей и материнский капитал.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н14", group: "ndfl", deduction: true, title: "Вычет по процентам по ипотеке",
+    show: a => a.has("ИПОТ"), labels: () => ["decl", "employer", "simple"],
+    give: "Можно вернуть часть налога. Учитывают проценты до 3 000 000 руб.",
+    who: "Тем, кто платит проценты по ипотеке.",
+    link: [LINK_FNS, LINKS.ndfl] },
+  { id: "Н15", group: "ndfl", deduction: true, title: "Вычет при продаже",
+    show: a => a.has("ПРОД"), labels: () => ["decl"],
+    give: "Налог с продажи будет меньше. Доход уменьшают на 1 000 000 руб. за год (жильё, дача, участок) или на 250 000 руб. (машина и другое имущество). Вместо этого можно учесть, сколько вы потратили на покупку.",
+    who: "Тем, кто владел проданной вещью меньше минимального срока.",
+    link: [LINK_FNS, LINKS.ndfl] },
+
+  /* --- НДФЛ: доходы без налога --- */
+  { id: "Н2", group: "ndfl", title: "Продажа без налога",
+    show: a => a.has("ПРОД"), labels: () => ["none"],
+    give: "С денег от продажи налог платить не нужно.",
+    who: "Тем, кто владел проданной вещью дольше минимального срока.",
+    cond: "Жильё, полученное по наследству, в подарок от родственника, при приватизации, или единственное жильё – 3 года. Другое жильё – 5 лет. Машина и другое имущество – 3 года.",
+    link: [LINK_NK, LINKS.nk] },
+  { id: "Н1", group: "ndfl", always: true, title: "Доходы, с которых не берут НДФЛ",
+    show: () => true, labels: () => ["none"],
+    give: "С этих денег налог не удерживают.",
+    who: "Всем, кто получает пенсию, пособие (кроме больничного), стипендию или алименты; подарки от членов семьи и близких родственников; до 4 000 руб. в год подарков и материальной помощи от работодателя.",
+    link: [LINK_NK, LINKS.nk] },
+
+  /* --- Налог для самозанятых --- */
+  { id: "С1", group: "npd", title: "Бонус 10 000 руб.",
+    show: a => a.has("НПД"), labels: () => ["none"],
+    give: "Налог считают по сниженной ставке: 3 % вместо 4 % и 4 % вместо 6 %, пока не израсходуете 10 000 руб.",
+    who: "Всем самозанятым, один раз.",
+    cond: "Налоговая уменьшает налог сама.",
+    link: [LINK_NPD, LINKS.npd] },
+  { id: "С2", group: "npd", title: "Режим для самозанятых",
+    show: a => a.has("НПД"), labels: () => ["mynalog"],
+    give: "Налог 4 % с доходов от людей и 6 % – от организаций и ИП. Декларацию подавать не нужно.",
+    who: "Тем, кто работает без работодателя и без наёмных работников и зарабатывает не больше 2,4 млн руб. в год.",
+    link: [LINK_NPD, LINKS.npd] }
+];
+
+/* Строка про госпошлину (Б2) */
+const showDuty = a => any(a, ["ИНВ1", "ИНВ2", "ИНВД", "ВБД", "ВОВ", "ГЕР"]);
+
+/* =====================================================================
+   ПОДБОР ЛЬГОТ (без интерфейса – можно проверять отдельно)
+   ===================================================================== */
+function resolve(v, a) { return typeof v === "function" ? v(a) : v; }
+
+function pickBenefits(a) {
+  return BENEFITS.filter(b => b.show(a)).map(b => {
+    let labels = b.labels(a);
+    if (!a.has("ТД")) labels = labels.filter(l => l !== "employer"); // «Через работодателя» – только при трудовом договоре
+    return {
+      id: b.id, group: b.group, title: b.title, spb: !!b.spb, always: !!b.always, deduction: !!b.deduction,
+      labels,
+      give: resolve(b.give, a), who: resolve(b.who, a), cond: resolve(b.cond, a) || "",
+      extra: (b.extra || []).filter(e => e.when(a)).map(e => e.text),
+      link: b.link
+    };
+  });
+}
+
+/* =====================================================================
+   ИНТЕРФЕЙС
+   ===================================================================== */
+const state = { screen: "start", q: 0, answers: QUESTIONS.map(() => []) };
+
+function allAnswers() { return new Set(state.answers.flat()); }
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+const app = typeof document !== "undefined" ? document.getElementById("app") : null;
+
+function go(screen, q, push) {
+  state.screen = screen;
+  if (typeof q === "number") state.q = q;
+  if (push !== false) history.pushState({ screen, q: state.q }, "");
+  render();
+}
+
+function render() {
+  document.body.classList.toggle("has-fixed-nav", state.screen === "question");
+  if (state.screen === "start") renderStart();
+  else if (state.screen === "question") renderQuestion();
+  else if (state.screen === "result") renderResult();
+  else if (state.screen === "about") renderAbout();
+  window.scrollTo(0, 0);
+  const h = app.querySelector("h1");
+  if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); }
+}
+
+function renderStart() {
+  document.title = "Проверь свои налоговые льготы";
+  app.innerHTML = `
+  <div class="wrap start">
+    <h1>Проверь свои налоговые льготы</h1>
+    <p class="lead">Ответьте на 8 вопросов о себе и узнайте, на какие налоговые льготы и вычеты вы можете претендовать и как их получить.</p>
+    <ul class="facts"><li>8 вопросов</li><li>Без регистрации</li><li>Ответы никуда не отправляются</li></ul>
+    <button class="btn primary go" type="button" id="start-btn">Начать</button>
+    <section class="learn" aria-labelledby="learn-h"><h2 id="learn-h">Что вы узнаете</h2><ul>
+      <li>Есть ли у вас льготы по налогу на имущество, земельному и транспортному налогу.</li>
+      <li>Какие вычеты по НДФЛ можно получить за лечение, обучение, жильё и другие расходы.</li>
+      <li>Как получить каждую льготу. Одни налоговая учитывает сама, для других нужно подать заявление или декларацию.</li>
+      <li>Где прочитать подробнее. К каждой льготе дана ссылка на сайт ФНС или на закон.</li>
+    </ul></section>
+    <p class="spbnote">Жителям Санкт-Петербурга помощник покажет ещё и городские льготы.</p>
+    <p class="edubox"><strong>Учебный проект.</strong> Не является консультацией налоговой службы. Информация верна на ${INFO_DATE}.</p>
+  </div>`;
+  app.querySelector("#start-btn").addEventListener("click", () => go("question", 0));
+}
+
+function renderQuestion() {
+  const i = state.q, Q = QUESTIONS[i], sel = state.answers[i];
+  const type = Q.multi ? "checkbox" : "radio";
+  const last = i === QUESTIONS.length - 1;
+  document.title = `Вопрос ${i + 1} из ${QUESTIONS.length} – Проверь свои налоговые льготы`;
+  app.innerHTML = `
+  <div class="wrap q-main">
+    <div class="q">
+      <div class="progress" aria-hidden="true"><i style="width:${((i + 1) / QUESTIONS.length) * 100}%"></i></div>
+      <p class="step">Вопрос ${i + 1} из ${QUESTIONS.length}</p>
+      <h1 id="q-title">${esc(Q.title)}</h1>
+      <p class="hint" id="q-hint">${esc(Q.hint)}</p>
+      <div class="opts" role="${Q.multi ? "group" : "radiogroup"}" aria-labelledby="q-title" aria-describedby="q-hint">
+        ${Q.options.map(([code, text]) => `
+        <label class="opt ${type}${sel.includes(code) ? " on" : ""}">
+          <input type="${type}" name="q${i}" value="${code}"${sel.includes(code) ? " checked" : ""}>
+          <span class="box" aria-hidden="true"></span><span class="txt">${esc(text)}</span>
+        </label>`).join("")}
+      </div>
+      <p class="error" id="q-error" role="alert"></p>
+    </div>
+    <div class="navbar fixed">
+      <button class="btn ghost" type="button" id="back-btn">Назад</button>
+      <button class="btn primary" type="button" id="next-btn">${last ? "Показать результат" : "Далее"}</button>
+    </div>
+  </div>`;
+
+  const inputs = [...app.querySelectorAll("input")];
+  const sync = () => {
+    state.answers[i] = inputs.filter(x => x.checked).map(x => x.value);
+    inputs.forEach(x => x.closest(".opt").classList.toggle("on", x.checked));
+    if (state.answers[i].length) app.querySelector("#q-error").textContent = "";
+  };
+  inputs.forEach(inp => inp.addEventListener("change", () => {
+    if (Q.multi && Q.exclusive && inp.checked) {
+      // «Ничего из этого» / «Нет» снимает остальные отметки и наоборот
+      inputs.forEach(x => {
+        if (x !== inp && (inp.value === Q.exclusive || x.value === Q.exclusive)) x.checked = false;
+      });
+    }
+    sync();
+  }));
+  app.querySelector("#back-btn").addEventListener("click", () => history.back());
+  app.querySelector("#next-btn").addEventListener("click", () => {
+    if (!state.answers[i].length) {
+      app.querySelector("#q-error").textContent = "Выберите вариант ответа, чтобы продолжить.";
+      return;
+    }
+    if (last) go("result"); else go("question", i + 1);
+  });
+}
+
+function cardHtml(c) {
+  const badges = c.labels.map(l => `<span class="badge ${LABELS[l].act ? "act" : "noact"}">${esc(LABELS[l].text)}</span>`).join("")
+    + (c.spb ? `<span class="spb">Для жителей Санкт-Петербурга</span>` : "");
+  return `<article class="card">
+    <div class="badges">${badges}</div>
+    <h3>${esc(c.title)}</h3>
+    <p class="row"><span class="k">Что даёт:</span> ${esc(c.give)}</p>
+    <p class="row"><span class="k">Кому:</span> ${esc(c.who)}</p>
+    ${c.cond ? `<p class="row"><span class="k">Условия:</span> ${esc(c.cond)}</p>` : ""}
+    ${c.extra.map(t => `<p class="extra">${esc(t)}</p>`).join("")}
+    <a class="more" href="${c.link[1]}" target="_blank" rel="noopener">${esc(c.link[0])}</a>
+  </article>`;
+}
+
+function renderResult() {
+  const a = allAnswers();
+  const cards = pickBenefits(a);
+  const found = cards.filter(c => !c.always);
+  const isEmpty = found.length === 0;
+  const noAction = cards.filter(c => c.labels.every(l => !LABELS[l].act)).length;
+  const usedLabels = Object.keys(LABELS).filter(l => cards.some(c => c.labels.includes(l)));
+  document.title = "Результат – Проверь свои налоговые льготы";
+
+  const head = isEmpty ? `
+    <div class="r-head"><h1>Особых льгот по вашим ответам не нашлось</h1>
+      <p>Так бывает, если вы не относитесь к льготным категориям и у вас не было крупных расходов. Но кое-что действует для всех.</p></div>
+    <section class="empty">
+      <h2>Если у вас есть или появится жильё</h2>
+      <p>Налог на имущество не начисляют на 20 кв. м квартиры, 10 кв. м комнаты и 50 кв. м дома. Делать для этого ничего не нужно.</p>
+      <h2>Если вы платите НДФЛ</h2>
+      <p>Часть налога можно вернуть, если вы платили за лечение, обучение, спорт, покупку жилья или ипотеку. Например, вычет 150 000 руб. возвращает 19 500 руб.</p>
+      <a class="more" href="${LINKS.ndfl}" target="_blank" rel="noopener">Подробнее о вычетах на сайте ФНС</a>
+    </section>` : `
+    <div class="r-head"><h1>Вы можете претендовать на эти льготы</h1>
+      <p>Мы подобрали их по вашим ответам. Есть ли у вас право на льготу, окончательно решает налоговая.</p>
+      <ul class="summary"><li>Найдено: ${cards.length}</li><li>Без ваших действий: ${noAction}</li><li>Нужно действие: ${cards.length - noAction}</li></ul>
+    </div>`;
+
+  const legend = `<details class="legend"><summary>Что значат метки</summary><dl>
+    ${usedLabels.map(l => `<dt><span class="badge ${LABELS[l].act ? "act" : "noact"}">${esc(LABELS[l].text)}</span></dt><dd>${esc(LABELS[l].about)}</dd>`).join("")}
+  </dl></details>`;
+
+  const region = a.has("РЕГ") ? `<p class="note">Мы показываем льготы, которые действуют по всей России. В вашем регионе могут быть свои льготы по транспортному, земельному налогу и налогу на имущество. Их можно найти в сервисе ФНС «Справочная информация о ставках и льготах по имущественным налогам». <a href="${LINKS.service}" target="_blank" rel="noopener">Открыть сервис ФНС</a></p>` : "";
+
+  const groups = GROUPS.map(([key, name]) => {
+    const list = cards.filter(c => c.group === key);
+    if (!list.length) return "";
+    let note = "";
+    if (key === "ndfl" && list.some(c => c.deduction)) {
+      note = `<div class="group-note">
+        <p>Вычет – это не сумма, которую вернут, а сумма, с которой пересчитают налог. Например, вычет 150 000 руб. возвращает 19 500 руб. Вернуть налог в упрощённом порядке можно не больше чем за 3 последних года.</p>
+        ${!a.has("ТД") ? `<p><strong>Важно для вас:</strong> вычет возвращает уже уплаченный НДФЛ. Он сработает, только если у вас есть доход, с которого платят НДФЛ, например зарплата. С доходов самозанятого НДФЛ не платят.</p>` : ""}
+      </div>`;
+    }
+    return `<section class="group" aria-labelledby="g-${key}"><h2 id="g-${key}">${name}</h2>${note}${list.map(cardHtml).join("")}</section>`;
+  }).join("");
+
+  app.innerHTML = `
+  <div class="wrap result">
+    <div class="print-only print-head" aria-hidden="true">
+      <p class="print-title">Мои возможные налоговые льготы</p>
+      <p>Составлено помощником «Проверь свои налоговые льготы» по моим ответам. Учебный проект, не является консультацией налоговой службы. Информация верна на ${INFO_DATE}.</p>
+    </div>
+    ${head}
+    ${legend}
+    ${region}
+    ${groups}
+    ${showDuty(a) ? `<p class="duty">При обращении к нотариусу или в суд у вас тоже могут быть льготы.</p>` : ""}
+    <section class="notice" aria-labelledby="notice-h">
+      <h2 id="notice-h">Если льгота не учтена в налоговом уведомлении</h2>
+      <ol>
+        <li>Проверьте личный кабинет на сайте ФНС: раздел «Профиль», подраздел «Сведения», вкладка «Льготы».</li>
+        <li>Если нужной льготы там нет, подайте заявление по форме КНД 1150063. Это можно сделать в личном кабинете, в МФЦ, в любой налоговой инспекции или по почте. Прикладывать документы не обязательно.</li>
+        <li>Заявление рассматривают 30 дней. Налог пересчитают не больше чем за 3 последних года.</li>
+      </ol>
+      <a class="more" href="${LINKS.property}" target="_blank" rel="noopener">Как подать заявление – на сайте ФНС</a>
+    </section>
+    <p class="edu">Учебный проект. Не является консультацией налоговой службы. Информация верна на ${INFO_DATE}.</p>
+    <div class="actions">
+      <button class="btn ghost" type="button" id="restart-btn">Начать заново</button>
+      <button class="btn primary" type="button" id="print-btn">Распечатать памятку</button>
+    </div>
+  </div>`;
+  app.querySelector("#restart-btn").addEventListener("click", () => {
+    state.answers = QUESTIONS.map(() => []);
+    go("start");
+  });
+  app.querySelector("#print-btn").addEventListener("click", () => window.print());
+}
+
+function renderAbout() {
+  document.title = "О проекте – Проверь свои налоговые льготы";
+  app.innerHTML = `
+  <div class="wrap about">
+    <h1>О проекте</h1>
+    <p>Этот помощник – продукт школьного проекта «Льготы по налогам и сборам, предоставляемые физическим лицам в России. Что мы о них знаем и умеем ли пользоваться?».</p>
+    <p>Автор – Роман Бусарнов, ученик 10 А класса гимназии № 74 Выборгского района Санкт-Петербурга.</p>
+    <p><strong>Зачем он нужен.</strong> Многие налоговые льготы налоговая учитывает сама. Но часть льгот и почти все вычеты по НДФЛ человек получает, только если сам знает о них и подаёт заявление или декларацию. Помощник подсказывает, на что вы можете претендовать и что для этого сделать.</p>
+    <p><strong>На чём основан.</strong> Налоговый кодекс РФ (в редакции на 14.11.2026), закон Санкт-Петербурга № 81-11 «О налоговых льготах» (в редакции от 23.04.2025), закон № 422-ФЗ о налоге для самозанятых, материалы сайта ФНС России. Все источники перечислены в работе.</p>
+    <p><strong>Что помощник не проверяет.</strong> Здесь самые распространённые льготы. В вопросах нет, например, военнослужащих с выслугой 20 лет, членов семей погибших военнослужащих, детей-сирот, малоимущих. Если вы относитесь к другим категориям, посмотрите <a href="${LINKS.service}" target="_blank" rel="noopener">сервис ФНС «Справочная информация о ставках и льготах по имущественным налогам»</a>.</p>
+    <p>Ваши ответы никуда не отправляются и не сохраняются. Всё считается на вашем устройстве и исчезает, когда вы закрываете страницу.</p>
+    <p>Это учебный проект, а не консультация налоговой службы. Информация верна на ${INFO_DATE}.</p>
+    <button class="btn ghost" type="button" id="about-back">Вернуться</button>
+  </div>`;
+  app.querySelector("#about-back").addEventListener("click", () => {
+    if (history.state && history.state.fromApp) history.back(); else go("start");
+  });
+}
+
+/* ---------- Запуск ---------- */
+if (app) {
+  history.replaceState({ screen: "start", q: 0 }, "");
+  window.addEventListener("popstate", e => {
+    const s = e.state || { screen: "start", q: 0 };
+    state.screen = s.screen; state.q = s.q || 0;
+    render();
+  });
+  document.getElementById("about-link").addEventListener("click", e => {
+    e.preventDefault();
+    if (state.screen !== "about") {
+      state.screen = "about";
+      history.pushState({ screen: "about", q: state.q, fromApp: true }, "");
+      render();
+    }
+  });
+  window.addEventListener("beforeprint", () => document.querySelectorAll("details").forEach(d => d.open = true));
+  render();
+}
+</script>
+</body>
+</html>
